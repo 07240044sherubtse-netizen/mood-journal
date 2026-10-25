@@ -1,0 +1,11 @@
+<%- include('../partials/header', { title: locals.title || 'MoodJournal', pageClass: 'page--narrow' }) %>
+
+<div class="card center">
+  <h1><%= locals.heading || 'MoodJournal' %></h1>
+  <p class="muted"><%= locals.text || '' %></p>
+  <% if (locals.linkHref) { %>
+    <p><a class="btn btn--primary" href="<%= linkHref %>"><%= locals.linkText || 'Continue' %></a></p>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

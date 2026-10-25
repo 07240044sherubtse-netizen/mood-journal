@@ -1,0 +1,10 @@
+<%- include('../partials/header', { title: 'Something went wrong', pageClass: 'page--narrow' }) %>
+
+<div class="card center">
+  <p class="big-emoji" aria-hidden="true">☁️</p>
+  <h1><%= status %></h1>
+  <p class="muted">Something went wrong on our side. Please try again.</p>
+  <p><a class="btn btn--primary" href="/">Back to my dashboard</a></p>
+</div>
+
+<%- include('../partials/footer') %>

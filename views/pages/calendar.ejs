@@ -1,0 +1,92 @@
+<%- include('../partials/header', { title: 'Calendar' }) %>
+
+<div class="card">
+  <div class="calendar-head">
+    <a class="btn" href="/calendar?month=<%= prevMonth %>" aria-label="Previous month">&larr; <%= prevLabel %></a>
+    <h1 class="calendar-title"><%= monthLabel %></h1>
+    <% if (canGoNext) { %>
+      <a class="btn" href="/calendar?month=<%= nextMonth %>" aria-label="Next month"><%= nextLabel %> &rarr;</a>
+    <% } else { %>
+      <span class="btn btn--muted" aria-disabled="true" title="You cannot look into the future">
+        <%= nextLabel %> &rarr;
+      </span>
+    <% } %>
+  </div>
+
+  <table class="calendar">
+    <caption class="sr-only">Mood calendar for <%= monthLabel %></caption>
+    <thead>
+      <tr>
+        <% weekdayHeadings.forEach(function (heading) { %>
+          <th scope="col"><%= heading %></th>
+        <% }); %>
+      </tr>
+    </thead>
+    <tbody>
+      <% weeks.forEach(function (week) { %>
+        <tr>
+          <% week.forEach(function (day) { %>
+            <% if (!day) { %>
+              <td class="calendar__cell calendar__cell--empty"></td>
+            <% } else { %>
+              <% const mood = day.mood ? MOODS[day.mood] : null; %>
+              <td class="calendar__cell <%= day.isToday ? 'calendar__cell--today' : '' %>">
+                <% if (mood) { %>
+                  <a class="calendar__day calendar__day--logged"
+                     href="/entries/<%= day.date %>"
+                     data-date="<%= day.date %>"
+                     data-label="<%= day.label %>"
+                     data-mood="<%= mood.label %>"
+                     data-emoji="<%= mood.emoji %>"
+                     style="background: <%= mood.color %>; color: <%= mood.text %>"
+                     aria-label="<%= day.label %>: <%= mood.label %>">
+                    <span class="calendar__number"><%= day.dayNumber %></span>
+                    <span class="calendar__face" aria-hidden="true"><%= mood.emoji %></span>
+                  </a>
+                <% } else if (day.isFuture) { %>
+                  <span class="calendar__day calendar__day--future">
+                    <span class="calendar__number"><%= day.dayNumber %></span>
+                  </span>
+                <% } else { %>
+                  <span class="calendar__day calendar__day--empty">
+                    <span class="calendar__number"><%= day.dayNumber %></span>
+                  </span>
+                <% } %>
+              </td>
+            <% } %>
+          <% }); %>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+
+  <p class="hint">Days with a mood are coloured. Today is circled. Past days cannot be changed.</p>
+</div>
+
+<div class="card">
+  <h2>Moods</h2>
+  <ul class="legend">
+    <% MOOD_LIST.forEach(function (mood) { %>
+      <li class="legend__item" style="background: <%= mood.color %>; color: <%= mood.text %>">
+        <span aria-hidden="true"><%= mood.emoji %></span> <%= mood.label %>
+      </li>
+    <% }); %>
+  </ul>
+</div>
+
+<!-- Small pop-up that shows what a day was, without leaving the calendar. -->
+<div class="modal is-hidden" id="day-modal" role="dialog" aria-modal="true" aria-labelledby="day-modal-title">
+  <div class="modal__box">
+    <h2 id="day-modal-title">Day</h2>
+    <p class="modal__mood" id="day-modal-mood"></p>
+    <p class="modal__note muted" id="day-modal-note"></p>
+    <p>
+      <a class="btn btn--primary" id="day-modal-link" href="#">Open the full entry</a>
+      <button class="btn" type="button" id="day-modal-close">Close</button>
+    </p>
+  </div>
+</div>
+
+<script src="/js/calendar.js"></script>
+
+<%- include('../partials/footer') %>

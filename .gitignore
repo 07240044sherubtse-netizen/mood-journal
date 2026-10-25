@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Secrets - never commit these
+.env
+.env.test
+
+# Test output
+coverage/
+
+# Logs and OS files
+npm-debug.log*
+.DS_Store
+Thumbs.db

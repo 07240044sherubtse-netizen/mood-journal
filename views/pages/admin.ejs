@@ -1,0 +1,172 @@
+<%- include('../partials/header', { title: 'Admin', pageClass: 'page--wide' }) %>
+
+<div class="card">
+  <h1>Super admin</h1>
+  <p class="muted small">
+    You can manage accounts and see totals. You can never read anyone&rsquo;s entries,
+    moods or notes &mdash; that is private to each person, and it stays that way.
+  </p>
+</div>
+
+<div class="stat-grid">
+  <div class="card stat-card">
+    <p class="muted small">Accounts</p>
+    <p class="stat-number"><%= stats.total_users %></p>
+  </div>
+  <div class="card stat-card">
+    <p class="muted small">Verified</p>
+    <p class="stat-number"><%= stats.verified_users %></p>
+  </div>
+  <div class="card stat-card">
+    <p class="muted small">Active</p>
+    <p class="stat-number"><%= stats.active_users %></p>
+  </div>
+  <div class="card stat-card">
+    <p class="muted small">Moods logged (all time)</p>
+    <p class="stat-number"><%= stats.total_entries %></p>
+  </div>
+  <div class="card stat-card">
+    <p class="muted small">Logged today</p>
+    <p class="stat-number"><%= stats.entries_today %></p>
+  </div>
+  <div class="card stat-card">
+    <p class="muted small">Logged in the last 7 days</p>
+    <p class="stat-number"><%= stats.entries_last_7_days %></p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Accounts</h2>
+
+  <form class="search-form" action="/admin" method="get">
+    <label class="sr-only" for="q">Search by name or email</label>
+    <input type="search" id="q" name="q" value="<%= search %>" placeholder="Search by name or email">
+    <button class="btn btn--primary" type="submit">Search</button>
+    <% if (search) { %>
+      <a class="btn" href="/admin">Clear</a>
+    <% } %>
+  </form>
+
+  <% if (matchedUsers === 0) { %>
+    <p class="muted">
+      <% if (search) { %>
+        No account matches &ldquo;<%= search %>&rdquo;.
+      <% } else { %>
+        There are no accounts yet.
+      <% } %>
+    </p>
+  <% } else { %>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <caption class="sr-only">Accounts, page <%= page %> of <%= totalPages %></caption>
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Role</th>
+            <th scope="col">Verified</th>
+            <th scope="col">Active</th>
+            <th scope="col">Joined</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(function (user) { %>
+            <tr>
+              <td><%= user.id %></td>
+              <td><%= user.name %><%= user.id === currentUser.id ? ' (you)' : '' %></td>
+              <td class="small"><%= user.email %></td>
+              <td>
+                <% if (user.role === 'superadmin') { %>
+                  <span class="badge badge--admin">super admin</span>
+                <% } else { %>
+                  user
+                <% } %>
+              </td>
+              <td>
+                <span class="badge <%= user.isVerified ? 'badge--ok' : 'badge--wait' %>">
+                  <%= user.isVerified ? 'yes' : 'no' %>
+                </span>
+              </td>
+              <td>
+                <span class="badge <%= user.isActive ? 'badge--ok' : 'badge--off' %>">
+                  <%= user.isActive ? 'yes' : 'no' %>
+                </span>
+              </td>
+              <td class="small"><%= user.joined %></td>
+              <td>
+                <div class="row-actions">
+                  <% if (!user.isVerified) { %>
+                    <form class="inline-form" action="/admin/users/<%= user.id %>/verify" method="post">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                      <button class="btn btn--small" type="submit">Verify</button>
+                    </form>
+                  <% } %>
+
+                  <% if (user.isActive && user.id !== currentUser.id && user.role !== 'superadmin') { %>
+                    <form class="inline-form" action="/admin/users/<%= user.id %>/deactivate" method="post">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                      <button class="btn btn--small btn--danger" type="submit">Deactivate</button>
+                    </form>
+                  <% } %>
+
+                  <% if (!user.isActive) { %>
+                    <form class="inline-form" action="/admin/users/<%= user.id %>/reactivate" method="post">
+                      <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+                      <button class="btn btn--small" type="submit">Reactivate</button>
+                    </form>
+                  <% } %>
+
+                  <% if (user.id === currentUser.id) { %>
+                    <span class="muted small">that is you</span>
+                  <% } else if (user.role === 'superadmin') { %>
+                    <span class="muted small">protected</span>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (totalPages > 1) { %>
+      <nav class="pagination" aria-label="Pages of accounts">
+        <% if (page > 1) { %>
+          <a class="btn btn--small" href="/admin?q=<%= encodeURIComponent(search) %>&amp;page=<%= page - 1 %>">&larr; Newer</a>
+        <% } else { %>
+          <span class="btn btn--small btn--muted" aria-disabled="true">&larr; Newer</span>
+        <% } %>
+        <span class="muted small">Page <%= page %> of <%= totalPages %> &middot; <%= matchedUsers %> accounts</span>
+        <% if (page < totalPages) { %>
+          <a class="btn btn--small" href="/admin?q=<%= encodeURIComponent(search) %>&amp;page=<%= page + 1 %>">Older &rarr;</a>
+        <% } else { %>
+          <span class="btn btn--small btn--muted" aria-disabled="true">Older &rarr;</span>
+        <% } %>
+      </nav>
+    <% } else { %>
+      <p class="muted small"><%= matchedUsers %> accounts.</p>
+    <% } %>
+  <% } %>
+</div>
+
+<div class="card">
+  <h2>Latest admin actions</h2>
+  <% if (actions.length === 0) { %>
+    <p class="muted">Nothing has been changed yet.</p>
+  <% } else { %>
+    <ul class="action-list">
+      <% actions.forEach(function (action) { %>
+        <li>
+          <span class="muted small"><%= action.when %></span>
+          <strong><%= action.adminName %></strong>
+          did <strong><%= action.action %></strong>
+          to <strong><%= action.targetName %></strong>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

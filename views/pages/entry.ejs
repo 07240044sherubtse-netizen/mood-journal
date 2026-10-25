@@ -1,0 +1,34 @@
+<%- include('../partials/header', { title: 'My entry', pageClass: locals.pageClass }) %>
+
+<% const mood = MOODS[entry.mood]; %>
+
+<div class="card">
+  <p class="muted"><%= weekday %></p>
+  <h1><%= entry.entry_date %></h1>
+
+  <div class="mood-show" style="background: <%= mood.color %>; color: <%= mood.text %>">
+    <span class="mood-show__emoji" aria-hidden="true"><%= mood.emoji %></span>
+    <span class="mood-show__label"><%= mood.label %></span>
+  </div>
+
+  <% if (entry.note) { %>
+    <h2>My note</h2>
+    <p class="note"><%= entry.note %></p>
+  <% } else { %>
+    <p class="muted">No note written for this day.</p>
+  <% } %>
+
+  <p class="muted small">
+    Logged <%= loggedAt %> · last changed <%= updatedAt %>
+  </p>
+
+  <% if (isToday) { %>
+    <p><a class="btn btn--primary" href="/">Edit today&rsquo;s entry</a></p>
+  <% } else { %>
+    <p class="muted small">Past days are view-only &mdash; they cannot be changed.</p>
+  <% } %>
+</div>
+
+<p><a href="/calendar">&larr; Back to the calendar</a></p>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,34 @@
+<%- include('../partials/header', { title: 'Create your account', pageClass: 'page--narrow' }) %>
+
+<div class="card">
+  <h1>Create your account</h1>
+  <p class="muted">One mood a day, a colourful calendar and a streak to keep alive.</p>
+
+  <% if (locals.error) { %>
+    <p class="alert alert--error" role="alert"><%= error %></p>
+  <% } %>
+
+  <form class="form" action="/signup" method="post">
+    <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+    <label for="name">Your name</label>
+    <input id="name" name="name" type="text" autocomplete="name" required maxlength="100" value="<%= locals.values && values.name ? values.name : '' %>">
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" required value="<%= locals.values && values.email ? values.email : '' %>">
+    <p class="hint">We send one link to this address to verify your account.</p>
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8">
+    <p class="hint">At least 8 characters.</p>
+
+    <label for="confirmPassword">Confirm password</label>
+    <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required minlength="8">
+
+    <button class="btn btn--primary" type="submit">Sign up</button>
+  </form>
+
+  <p class="muted">Already have an account? <a href="/login">Log in</a></p>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,19 @@
+# .dockerignore - what the Docker build must NOT copy into the image.
+# (node_modules is left out because the Dockerfile installs it fresh.)
+
+node_modules/
+
+# Secrets - never go into an image
+.env
+.env.test
+.env.test.example
+
+# Git and editor/OS junk
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+
+# Test output and logs
+coverage/
+npm-debug.log*

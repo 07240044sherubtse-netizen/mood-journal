@@ -1,0 +1,100 @@
+<%- include('../partials/header', { title: 'Dashboard' }) %>
+
+<div class="card">
+  <p class="muted"><%= weekday %>, <%= today %></p>
+  <h1><%= greeting %></h1>
+  <p class="muted">How are you feeling today?</p>
+</div>
+
+<div class="grid-2">
+  <div class="card streak-card">
+    <p class="muted small">Current streak</p>
+    <p class="streak-number"><span aria-hidden="true">🔥</span> <%= info.currentStreak %></p>
+    <p class="muted small">
+      <%= info.currentStreak === 1 ? 'day' : 'days' %> in a row
+      &middot; longest: <%= info.longestStreak %>
+    </p>
+  </div>
+
+  <div class="card message-card <%= message.celebrate ? 'message-card--celebrate' : '' %>">
+    <h2><%= message.title %></h2>
+    <p class="muted"><%= message.text %></p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Have you logged your mood today?</h2>
+
+  <% if (todayEntry) { %>
+    <% const mood = MOODS[todayEntry.mood]; %>
+    <div class="mood-show" style="background: <%= mood.color %>; color: <%= mood.text %>">
+      <span class="mood-show__emoji" aria-hidden="true"><%= mood.emoji %></span>
+      <span class="mood-show__label"><%= mood.label %></span>
+    </div>
+    <% if (todayEntry.note) { %>
+      <p class="note"><%= todayEntry.note %></p>
+    <% } else { %>
+      <p class="muted small">No note written today.</p>
+    <% } %>
+    <p>
+      <button class="btn btn--primary" type="button" id="edit-today" aria-expanded="false"
+              aria-controls="mood-form-wrap">Edit today&rsquo;s entry</button>
+    </p>
+  <% } else { %>
+    <p class="muted">Choose the mood that fits you best right now.</p>
+  <% } %>
+
+  <div id="mood-form-wrap" class="<%= todayEntry ? 'is-hidden' : '' %>">
+    <form class="form" action="/entries/today" method="post" id="mood-form">
+      <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+      <fieldset class="mood-picker">
+        <legend class="sr-only">Choose your mood</legend>
+        <% MOOD_LIST.forEach(function (mood) { %>
+          <label class="mood-option">
+            <input type="radio" name="mood" value="<%= mood.key %>"
+                   <%= todayEntry && todayEntry.mood === mood.key ? 'checked' : '' %> required>
+            <span class="mood-option__face" style="background: <%= mood.color %>; color: <%= mood.text %>">
+              <span aria-hidden="true"><%= mood.emoji %></span>
+              <span class="mood-option__name"><%= mood.label %></span>
+            </span>
+          </label>
+        <% }); %>
+      </fieldset>
+
+      <label for="note">Note (optional, up to 200 characters)</label>
+      <textarea id="note" name="note" rows="3" maxlength="200"
+                placeholder="Anything you want to remember about today"><%= todayEntry ? todayEntry.note : '' %></textarea>
+      <p class="hint"><span id="note-count">0</span>/200</p>
+
+      <button class="btn btn--primary" type="submit">Save today&rsquo;s mood</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Last 7 days</h2>
+  <ul class="week-strip">
+    <% week.forEach(function (day) { %>
+      <li class="week-day <%= day.isToday ? 'week-day--today' : '' %>">
+        <span class="week-day__name"><%= day.weekday %></span>
+        <% if (day.mood) { %>
+          <% const mood = MOODS[day.mood]; %>
+          <a class="week-day__dot" href="/entries/<%= day.date %>"
+             style="background: <%= mood.color %>; color: <%= mood.text %>"
+             title="<%= mood.label %>" aria-label="<%= day.date %>: <%= mood.label %>">
+            <span aria-hidden="true"><%= mood.emoji %></span>
+          </a>
+        <% } else { %>
+          <span class="week-day__dot week-day__dot--empty" title="No entry"
+                aria-label="<%= day.date %>: no entry">&middot;</span>
+        <% } %>
+      </li>
+    <% }); %>
+  </ul>
+  <p class="hint">Tap a day to look back at it.</p>
+</div>
+
+<script src="/js/dashboard.js"></script>
+
+<%- include('../partials/footer') %>

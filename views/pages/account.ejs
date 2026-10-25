@@ -1,0 +1,67 @@
+<%- include('../partials/header', { title: 'Account', pageClass: 'page--narrow' }) %>
+
+<div class="card">
+  <h1>My account</h1>
+  <p class="muted">
+    Signed in as <strong><%= currentUser.name %></strong>.
+  </p>
+  <p class="muted small">
+    Your entries are private: nobody else can read them, not even an administrator.
+  </p>
+</div>
+
+<div class="card">
+  <h2>Change my password</h2>
+  <form class="form" action="/account/password" method="post">
+    <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+    <label for="currentPassword">Current password</label>
+    <input type="password" id="currentPassword" name="currentPassword"
+           autocomplete="current-password" required>
+
+    <label for="password">New password (at least 8 characters)</label>
+    <input type="password" id="password" name="password"
+           autocomplete="new-password" minlength="8" required>
+
+    <label for="confirmPassword">Repeat the new password</label>
+    <input type="password" id="confirmPassword" name="confirmPassword"
+           autocomplete="new-password" minlength="8" required>
+
+    <button class="btn btn--primary" type="submit">Save the new password</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Download my data</h2>
+  <p class="muted small">
+    Get a CSV file with one row for each day you logged: date, weekday, mood, note
+    and the times you saved and last changed it.
+  </p>
+  <form class="form" action="/account/export.csv" method="get">
+    <label for="from">From (optional)</label>
+    <input type="date" id="from" name="from">
+
+    <label for="to">To (optional)</label>
+    <input type="date" id="to" name="to">
+
+    <button class="btn btn--primary" type="submit">Download my data (CSV)</button>
+  </form>
+  <p class="hint">Leave both empty to download everything.</p>
+</div>
+
+<div class="card card--danger">
+  <h2>Delete my account</h2>
+  <p class="muted small">
+    This removes your account and every mood entry with it. It cannot be undone.
+  </p>
+  <form class="form" action="/account/delete" method="post">
+    <input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">
+
+    <label for="confirm">Type DELETE to confirm</label>
+    <input type="text" id="confirm" name="confirm" autocomplete="off" required>
+
+    <button class="btn btn--danger" type="submit">Delete my account for good</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

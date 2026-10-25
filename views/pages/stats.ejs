@@ -1,0 +1,83 @@
+<%- include('../partials/header', { title: 'Statistics' }) %>
+
+<div class="card">
+  <h1>My statistics</h1>
+  <p class="muted">Everything here is private to you.</p>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <p class="muted small">Current streak</p>
+    <p class="streak-number"><span aria-hidden="true">🔥</span> <%= currentStreak %></p>
+    <p class="muted small"><%= currentStreak === 1 ? 'day' : 'days' %> in a row</p>
+  </div>
+  <div class="card">
+    <p class="muted small">Longest streak</p>
+    <p class="streak-number"><span aria-hidden="true">🏅</span> <%= longestStreak %></p>
+    <p class="muted small"><%= longestStreak === 1 ? 'day' : 'days' %> in a row</p>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <p class="muted small">Moods logged in <%= monthLabel %></p>
+    <p class="stat-number"><%= totalThisMonth %></p>
+  </div>
+  <div class="card">
+    <p class="muted small">Moods logged all time</p>
+    <p class="stat-number"><%= totalAllTime %></p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Most frequent mood this month</h2>
+  <% if (mostFrequent) { %>
+    <div class="mood-show" style="background: <%= mostFrequent.color %>; color: <%= mostFrequent.text %>">
+      <span class="mood-show__emoji" aria-hidden="true"><%= mostFrequent.emoji %></span>
+      <span class="mood-show__label"><%= mostFrequent.label %></span>
+      <span class="muted small">(<%= mostFrequent.count %> <%= mostFrequent.count === 1 ? 'day' : 'days' %>)</span>
+    </div>
+  <% } else { %>
+    <p class="muted">No moods logged in <%= monthLabel %> yet. Log today&rsquo;s mood to start the chart.</p>
+  <% } %>
+</div>
+
+<div class="card">
+  <h2>How often each mood appeared</h2>
+  <% if (totalThisMonth === 0) { %>
+    <p class="muted">Nothing to show yet this month.</p>
+  <% } else { %>
+    <ul class="bars">
+      <% bars.forEach(function (bar) { %>
+        <li class="bar">
+          <span class="bar__label" style="color: <%= bar.text %>">
+            <span aria-hidden="true"><%= bar.emoji %></span> <%= bar.label %>
+          </span>
+          <span class="bar__track">
+            <span class="bar__fill" style="width: <%= bar.percent %>%; background: <%= bar.color %>"></span>
+          </span>
+          <span class="bar__value muted small"><%= bar.count %> &middot; <%= bar.percent %>%</span>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+</div>
+
+<div class="card">
+  <h2>Download my data</h2>
+  <p class="muted small">Take your entries with you as a CSV file.</p>
+  <form class="form" action="/account/export.csv" method="get">
+    <label for="from">From (optional)</label>
+    <input type="date" id="from" name="from">
+
+    <label for="to">To (optional)</label>
+    <input type="date" id="to" name="to">
+
+    <button class="btn btn--primary" type="submit">Download my data (CSV)</button>
+  </form>
+  <p class="hint">Leave both empty to download everything.</p>
+</div>
+
+<p><a class="btn" href="/calendar">See the calendar</a></p>
+
+<%- include('../partials/footer') %>
