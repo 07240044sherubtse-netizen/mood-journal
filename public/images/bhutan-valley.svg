@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">A quiet Bhutanese valley at sunrise</title>
+  <desc id="desc">Layered Himalayan mountains, a traditional dzong, pine trees, and colorful prayer flags beneath a warm sunrise.</desc>
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1">
+      <stop stop-color="#F7D9A1"/>
+      <stop offset=".56" stop-color="#F5A77D"/>
+      <stop offset="1" stop-color="#7E4963"/>
+    </linearGradient>
+    <linearGradient id="valley" x2="0" y2="1">
+      <stop stop-color="#587B70"/>
+      <stop offset="1" stop-color="#203E45"/>
+    </linearGradient>
+    <linearGradient id="dzong" x2="0" y2="1">
+      <stop stop-color="#FFF0D0"/>
+      <stop offset="1" stop-color="#D7A878"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="820" fill="url(#sky)"/>
+  <circle cx="880" cy="205" r="88" fill="#FFF0BF" opacity=".9"/>
+  <path d="m0 430 173-207 99 113 172-220 156 228 141-171 143 190 132-125 184 208v220H0Z" fill="#B98288" opacity=".76"/>
+  <path d="m0 486 169-198 104 113 170-220 124 182 52-42 143 166 147-135 106 93 185-129v302H0Z" fill="#75627A" opacity=".82"/>
+  <path d="m0 545 151-114 129 77 157-124 154 106 143-90 176 104 145-91 145 69v338H0Z" fill="url(#valley)"/>
+  <path d="M0 610q180-85 339-34t319-4q192-72 542 15v233H0Z" fill="#23484A"/>
+  <g fill="#17383D">
+    <path d="m90 635 42-131 42 131h-25v54h-34v-54zM1015 623l45-145 46 145h-28v63h-36v-63zM1090 649l33-103 34 103h-21v46h-27v-46z"/>
+    <path d="m220 647 33-104 34 104h-21v44h-27v-44zM915 656l34-108 35 108h-21v48h-28v-48z"/>
+  </g>
+  <g transform="translate(442 454)">
+    <path d="M0 99h314v183H0z" fill="url(#dzong)"/>
+    <path d="M-18 98 157 25l176 73z" fill="#9C5149"/>
+    <path d="M46 75h224v-63l-25-20H71L46 12z" fill="#F5E4C7"/>
+    <path d="M30 12h255l-27-43H58z" fill="#7C343F"/>
+    <path d="M62-33h190l-21-31H83z" fill="#B95445"/>
+    <path d="M126-64h63l-11-21h-41z" fill="#F5D17F"/>
+    <g fill="#713D43"><path d="M32 123h24v34H32zM86 123h24v34H86zM140 123h24v34h-24zM194 123h24v34h-24zM248 123h24v34h-24z"/></g>
+    <path d="M132 211h50v71h-50z" fill="#8A443F"/>
+    <path d="M119 210h76v12h-76z" fill="#64343A"/>
+    <path d="M-30 282h373v18H-30z" fill="#E9C28E"/>
+  </g>
+  <g stroke="#EDE2CC" stroke-width="4" opacity=".9">
+    <path d="M103 101 1081 266"/>
+  </g>
+  <g>
+    <path d="m238 122 64 11-32 34z" fill="#D94D50"/>
+    <path d="m354 141 64 11-32 34z" fill="#F3C54F"/>
+    <path d="m470 160 64 11-32 34z" fill="#4D9B77"/>
+    <path d="m586 179 64 11-32 34z" fill="#4C83B9"/>
+    <path d="m702 198 64 11-32 34z" fill="#F1E7CF"/>
+    <path d="m818 218 64 11-32 34z" fill="#D94D50"/>
+    <path d="m934 237 64 11-32 34z" fill="#F3C54F"/>
+  </g>
+  <path d="M0 780q230-55 460 0t740-4v44H0z" fill="#172F36" opacity=".58"/>
+</svg>

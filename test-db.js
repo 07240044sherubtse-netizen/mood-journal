@@ -6,6 +6,7 @@ require('dotenv').config();
 const db = require('./config/db');
 
 const REQUIRED_TABLES = ['users', 'entries', 'admin_actions'];
+const REQUIRED_USER_COLUMNS = ['verification_token_expires'];
 
 async function main() {
   const ping = await db.one('SELECT 1 AS ok'); // simple connection test
@@ -28,6 +29,20 @@ async function main() {
     console.log('   Run: psql -U <user> -d <database> -f schema.sql');
   }
 
+  const userColumns = await db.any(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'users'
+        AND column_name = ANY($1)`,
+    [REQUIRED_USER_COLUMNS]
+  );
+  const foundUserColumns = userColumns.map((row) => row.column_name);
+  const missingUserColumns = REQUIRED_USER_COLUMNS.filter((column) => !foundUserColumns.includes(column));
+  console.log('3a) Verification columns:', foundUserColumns.join(', ') || '(none)');
+  if (missingUserColumns.length > 0) {
+    console.log('   MISSING columns:', missingUserColumns.join(', '));
+    console.log('   Run schema.sql against this database to apply the safe, idempotent schema update.');
+  }
+
   // The one-entry-per-day rule lives in the database, so check the constraint too.
   const uniqueRule = await db.oneOrNone(
     `SELECT 1 FROM pg_constraint c
@@ -36,7 +51,7 @@ async function main() {
   );
   console.log('4) entries UNIQUE (user_id, entry_date):', uniqueRule ? 'present' : 'MISSING');
 
-  const ok = missing.length === 0 && Boolean(uniqueRule);
+  const ok = missing.length === 0 && missingUserColumns.length === 0 && Boolean(uniqueRule);
   console.log(ok ? '\nResult: database looks good.' : '\nResult: database is NOT ready.');
   return ok;
 }

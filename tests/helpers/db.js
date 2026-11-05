@@ -43,8 +43,12 @@ async function createUser({
 }
 
 // Give a user a verification link token, exactly as signing up would.
-async function giveVerificationToken(userId, token) {
-  await db.none('UPDATE users SET verification_token = $2 WHERE id = $1', [userId, token]);
+async function giveVerificationToken(userId, token, hoursFromNow = 24) {
+  await db.none(
+    `UPDATE users SET verification_token = $2,
+       verification_token_expires = now() + ($3::text || ' hours')::interval WHERE id = $1`,
+    [userId, token, String(hoursFromNow)]
+  );
 }
 
 // Give a user a password-reset token. A negative number of minutes makes it

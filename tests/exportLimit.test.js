@@ -13,12 +13,14 @@ jest.mock('../config/mailer', () => ({
 
 const { resetDb, createUser, createEntry, closeDb } = require('./helpers/db');
 const { signedIn } = require('./helpers/http');
+const { exportLimiter } = require('../middleware/exportLimit');
 const { todayInTimezone } = require('../utils/dates');
 
 const TODAY = todayInTimezone();
 
 beforeEach(async () => {
   await resetDb();
+  for (let id = 1; id <= 20; id += 1) exportLimiter.resetKey(`user:${id}`);
 });
 
 afterAll(async () => {

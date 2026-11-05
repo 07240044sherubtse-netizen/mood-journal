@@ -4,12 +4,15 @@
 const Entry = require('../models/Entry');
 const validators = require('../utils/validators');
 const streak = require('../utils/streak');
+const analytics = require('../utils/analytics');
 const { MOODS, MOOD_LIST } = require('../utils/moods');
 const {
   todayInTimezone,
   todayParts,
   weekdayName,
-  formatDateTime
+  formatDateTime,
+  isValidDateString,
+  addDays
 } = require('../utils/dates');
 
 const MONTH_PATTERN = /^(\d{4})-(\d{2})$/;
@@ -168,4 +171,85 @@ async function getStats(req, res) {
   });
 }
 
-module.exports = { getEntries, getEntry, putToday, getStats };
+// GET /api/analytics?week=YYYY-MM-DD&month=YYYY-MM
+// Periods are selected by the client; identity always comes from the session.
+async function getAnalytics(req, res) {
+  const today = todayParts();
+  const currentWeekStart = analytics.weekStart(today.iso);
+
+  let weekStart = currentWeekStart;
+  if (req.query.week !== undefined) {
+    const requestedWeek = String(req.query.week);
+    if (!isValidDateString(requestedWeek)) {
+      return res.status(400).json({ error: 'week must be a real date in YYYY-MM-DD format.' });
+    }
+    weekStart = analytics.weekStart(requestedWeek);
+    if (weekStart > currentWeekStart) {
+      return res.status(400).json({ error: 'You cannot view a future week.' });
+    }
+  }
+
+  let year = today.year;
+  let month = today.month;
+  if (req.query.month !== undefined) {
+    const asked = MONTH_PATTERN.exec(String(req.query.month));
+    if (!asked) return res.status(400).json({ error: 'month must look like YYYY-MM.' });
+    year = Number(asked[1]);
+    month = Number(asked[2]);
+    if (year < 1 || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'month must be a valid calendar month.' });
+    }
+    if (year > today.year || (year === today.year && month > today.month)) {
+      return res.status(400).json({ error: 'You cannot view a future month.' });
+    }
+  }
+
+  const weekEnd = addDays(weekStart, 6);
+  const monthKey = `${year}-${pad(month)}`;
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const visibleWeekEnd = weekEnd > today.iso ? today.iso : weekEnd;
+  const [weekEntries, queriedMonthEntries, allDates] = await Promise.all([
+    Entry.getInRange(req.currentUser.id, weekStart, visibleWeekEnd),
+    Entry.getByMonth(req.currentUser.id, year, month),
+    Entry.getAllDates(req.currentUser.id)
+  ]);
+
+  const monthEntries = queriedMonthEntries.filter((entry) => entry.entry_date <= today.iso);
+  const monthSummary = analytics.summarizeMonth(monthEntries, allDates, today.iso);
+  const startLabel = new Intl.DateTimeFormat('en', {
+    timeZone: 'UTC', month: 'short', day: 'numeric'
+  }).format(new Date(`${weekStart}T00:00:00Z`));
+  const endLabel = new Intl.DateTimeFormat('en', {
+    timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric'
+  }).format(new Date(`${weekEnd}T00:00:00Z`));
+
+  res.json({
+    today: today.iso,
+    week: {
+      start: weekStart,
+      end: weekEnd,
+      label: `${startLabel} – ${endLabel}`,
+      days: analytics.buildWeek(weekStart, weekEntries)
+    },
+    month: {
+      key: monthKey,
+      label: `${monthNames[month - 1]} ${year}`,
+      total: monthSummary.totalThisMonth,
+      mostFrequent: monthSummary.mostFrequent,
+      moods: monthSummary.moods
+    },
+    summary: {
+      totalAllTime: monthSummary.totalAllTime,
+      currentStreak: monthSummary.currentStreak,
+      longestStreak: monthSummary.longestStreak,
+      positive: monthSummary.positive,
+      neutral: monthSummary.neutral,
+      negative: monthSummary.negative
+    },
+    moodAxis: analytics.MOOD_AXIS
+  });
+}
+
+module.exports = { getEntries, getEntry, putToday, getStats, getAnalytics };

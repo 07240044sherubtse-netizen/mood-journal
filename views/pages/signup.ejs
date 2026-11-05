@@ -1,6 +1,18 @@
-<%- include('../partials/header', { title: 'Create your account', pageClass: 'page--narrow' }) %>
+<%- include('../partials/header', { title: 'Create your account', pageClass: 'page--auth' }) %>
 
-<div class="card">
+<div class="auth-layout">
+  <section class="auth-art" aria-label="Bhutanese valley at sunrise">
+    <img src="/images/bhutan-valley.svg" alt="Illustration of a Bhutanese dzong beneath Himalayan peaks and prayer flags">
+    <div class="auth-art__caption">
+      <span class="eyebrow">A little space to check in</span>
+      <h2>Find your own calm, one day at a time.</h2>
+      <p>Small moments matter. Keep them somewhere that feels like yours.</p>
+    </div>
+    <span class="auth-art__seal" aria-hidden="true">འབྲུག</span>
+  </section>
+
+  <div class="card auth-card">
+  <span class="eyebrow">Your private daily journal</span>
   <h1>Create your account</h1>
   <p class="muted">One mood a day, a colourful calendar and a streak to keep alive.</p>
 
@@ -29,6 +41,7 @@
   </form>
 
   <p class="muted">Already have an account? <a href="/login">Log in</a></p>
+  </div>
 </div>
 
 <%- include('../partials/footer') %>

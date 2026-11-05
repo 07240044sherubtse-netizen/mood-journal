@@ -104,8 +104,8 @@ If they are, stop and fix `.gitignore` before continuing.
    | `DB_PASS` | your Neon password |
    | `DB_SSL` | `true` (Neon requires SSL) |
    | `SESSION_SECRET` | the long random string from step 0 |
-   | `GMAIL_USER` | your Gmail address (optional, see step 6) |
-   | `GMAIL_APP_PASSWORD` | your Gmail app password (optional, see step 6) |
+   | `MAIL_WEBHOOK_URL` | Google Apps Script Web App URL ending in `/exec` |
+   | `MAIL_WEBHOOK_SECRET` | long random secret also stored in Apps Script Script Properties |
 
 5. Click **Create Web Service**. The first build takes a few minutes; watch the
    log until you see `MoodJournal running on …`. The service is now live, but the
@@ -145,22 +145,64 @@ Log in at `/login` with it and the **Admin** link will appear in the menu.
 
 ---
 
-## 6. Email: what to expect on a free plan
+## 6. Email: Google Apps Script HTTPS relay
 
-The app sends mail through Gmail SMTP when `GMAIL_USER` and
-`GMAIL_APP_PASSWORD` are both set. Two honest caveats:
+This relay is used in production. Local development sends through Gmail SMTP
+using `GMAIL_USER` and `GMAIL_APP_PASSWORD` in the local `.env` file.
 
-* **Render blocks outbound SMTP (ports 25/465/587) on free workspaces.** Gmail
-  SMTP will therefore time out in production, even with correct app passwords.
-* **If you leave the Gmail variables empty**, the mailer prints the email in the
-  terminal instead of sending it. On Render that means the verification link
-  shows up on the service's **Logs** page — fine for a demo or a class, where you
-  (the owner) can read the link and open it.
+Create a Google Apps Script project with this `doPost(e)` handler. It checks the
+shared secret, checks the send quota, uses `MailApp`, and returns `{ "ok": true }`
+only after Google accepts the message. Failures return safe codes without
+exposing addresses or secrets:
 
-If you need real emails, use an email provider that sends over HTTPS (Resend,
-SendGrid, Brevo, …) and swap the Gmail transport in `config/mailer.js` for that
-provider. The rest of the app does not change: it only calls
-`sendVerificationEmail` and `sendResetEmail`.
+```javascript
+function jsonResponse(value) {
+  return ContentService.createTextOutput(JSON.stringify(value))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const secret = PropertiesService.getScriptProperties().getProperty('MAIL_SECRET');
+    if (!secret) return jsonResponse({ ok: false, code: 'SECRET_NOT_SET' });
+    if (data.secret !== secret) return jsonResponse({ ok: false, code: 'SECRET_MISMATCH' });
+    if (!data.to || !data.subject || !data.text || !data.html) {
+      return jsonResponse({ ok: false, code: 'INVALID_REQUEST' });
+    }
+    if (MailApp.getRemainingDailyQuota() < 1) {
+      return jsonResponse({ ok: false, code: 'QUOTA_EXHAUSTED' });
+    }
+    MailApp.sendEmail({
+      to: data.to,
+      subject: data.subject,
+      body: data.text,
+      htmlBody: data.html,
+      name: data.name || 'MoodJournal'
+    });
+    return jsonResponse({ ok: true });
+  } catch (err) {
+    console.error('Mail relay failed (' + (err && err.name ? err.name : 'Error') + ')');
+    return jsonResponse({ ok: false, code: 'SEND_FAILED' });
+  }
+}
+
+// Run once in the editor to authorize sending and check remaining quota.
+function authorizeMail() {
+  const remaining = MailApp.getRemainingDailyQuota();
+  console.log('Mail authorization is ready. Remaining recipient quota: ' + remaining);
+}
+```
+
+Set the `MAIL_SECRET` Script Property before deployment. Deploy it as a Web app,
+executing as your Google account, with access set to anyone. Set its deployed `/exec` URL as
+`MAIL_WEBHOOK_URL` and the same long random secret in `MAIL_WEBHOOK_SECRET` and
+the Apps Script project's Script Properties under `MAIL_SECRET`. Apps Script/Gmail sending quotas apply. Configure these
+settings in local `.env` and your hosted service. Without working settings,
+signup shows a delivery error; verification links are never printed to logs.
+Store `MAIL_SECRET` in the Apps Script project's **Script Properties** (not in
+the source). After changing the code, run `authorizeMail`, approve access, then
+deploy a new Web App version. The app logs only `MAIL_RELAY_*` failure codes.
 
 ---
 
@@ -169,8 +211,7 @@ provider. The rest of the app does not change: it only calls
 Open your live address and walk through these. Every box should pass.
 
 * [ ] `https://your-app.onrender.com/health` shows `{"status":"ok"}`.
-* [ ] Sign up with a new account. The verification email is sent (or its link
-      appears in the Render logs).
+* [ ] Sign up with a new account and confirm the verification email arrives.
 * [ ] Open the verification link — the "email verified" page appears and you can
       log in.
 * [ ] Save today's mood from the dashboard, with a short note.
@@ -211,7 +252,7 @@ you are pointing at a local PostgreSQL.
   no visitors, and a free Neon database suspends too. The first request after
   that takes a little while to wake up. The `/health` check brings it back.
 * **Redeploy:** every push to `main` rebuilds and redeploys automatically.
-* **Logs:** the Render **Logs** tab shows the app's `console.log` output,
-  including any email links that were printed instead of sent.
+* **Logs:** the Render **Logs** tab shows application status messages. Email
+  contents and verification links are never logged.
 * **Changing `SESSION_SECRET`** logs everybody out — that is normal.
 * **Rolling back:** Render keeps previous deploys; use **Events → Rollback**.

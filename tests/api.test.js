@@ -10,6 +10,7 @@ const { db, resetDb, createUser, createEntry, count, closeDb } = require('./help
 const { client, csrf, signedIn } = require('./helpers/http');
 const { todayInTimezone, todayParts, addDays } = require('../utils/dates');
 const { MOOD_KEYS } = require('../utils/moods');
+const { weekStart } = require('../utils/analytics');
 
 const TODAY = todayInTimezone();
 const YESTERDAY = addDays(TODAY, -1);
@@ -23,6 +24,17 @@ function nextMonth() {
   if (month > 12) {
     month = 1;
     year += 1;
+  }
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+function previousMonth() {
+  const now = todayParts();
+  let year = now.year;
+  let month = now.month - 1;
+  if (month < 1) {
+    month = 12;
+    year -= 1;
   }
   return `${year}-${String(month).padStart(2, '0')}`;
 }
@@ -49,7 +61,7 @@ describe('a call without a session', () => {
   test('always answers 401 JSON, never a redirect', async () => {
     const visitor = client();
 
-    for (const url of ['/api/stats', '/api/entries', `/api/entries/${TODAY}`]) {
+    for (const url of ['/api/stats', '/api/analytics', '/api/entries', `/api/entries/${TODAY}`]) {
       const res = await visitor.get(url);
       expect(res.status).toBe(401);
       expect(res.body.error).toBe('You must be logged in.');
@@ -163,6 +175,69 @@ describe('PUT /api/entries/today', () => {
 
     expect(res.status).toBe(400);
     expect(await count('entries')).toBe(0);
+  });
+});
+
+describe('GET /api/analytics', () => {
+  test('returns seven Monday-to-Sunday days and only the signed-in user’s data', async () => {
+    const owner = await createUser({ email: 'owner@example.com' });
+    const other = await createUser({ email: 'other@example.com' });
+    await createEntry(owner.id, TODAY, 'happy');
+    await createEntry(other.id, TODAY, 'angry');
+
+    const agent = await signedIn('owner@example.com');
+    const res = await agent.get(`/api/analytics?week=${TODAY}&month=${TODAY.slice(0, 7)}&user_id=${other.id}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.week.days).toHaveLength(7);
+    expect(res.body.week.days.map((day) => day.weekday)).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+    expect(res.body.week.days.find((day) => day.date === TODAY).mood).toBe('happy');
+    expect(res.body.month.total).toBe(1);
+    expect(res.body.month.mostFrequent.key).toBe('happy');
+    expect(res.body.summary.totalAllTime).toBe(1);
+    expect(res.body.summary.positive).toBe(1);
+    expect(res.body.summary.negative).toBe(0);
+    expect(res.body.week.days.every((day) => day.mood !== 'angry')).toBe(true);
+    expect(res.body.month.moods.find((mood) => mood.key === 'angry').count).toBe(0);
+  });
+
+  test('returns a friendly zero-data series for an empty account', async () => {
+    await createUser({ email: 'empty@example.com' });
+    const agent = await signedIn('empty@example.com');
+    const res = await agent.get(`/api/analytics?week=${TODAY}&month=${TODAY.slice(0, 7)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.week.days).toHaveLength(7);
+    expect(res.body.week.days.every((day) => day.mood === null)).toBe(true);
+    expect(res.body.month.total).toBe(0);
+    expect(res.body.month.mostFrequent).toBeNull();
+    expect(res.body.summary.totalAllTime).toBe(0);
+  });
+
+  test('loads a previous week and month when the selected periods change', async () => {
+    const user = await createUser({ email: 'nima@example.com' });
+    const priorWeekDate = addDays(TODAY, -7);
+    const priorMonth = previousMonth();
+    const monthStart = `${priorMonth}-01`;
+    await createEntry(user.id, monthStart, 'calm');
+    const agent = await signedIn('nima@example.com');
+
+    const res = await agent.get(`/api/analytics?week=${priorWeekDate}&month=${priorMonth}`);
+    expect(res.status).toBe(200);
+    expect(res.body.week.start).toBe(weekStart(priorWeekDate));
+    expect(res.body.month.key).toBe(priorMonth);
+    expect(res.body.month.total).toBe(1);
+    expect(res.body.month.mostFrequent.key).toBe('calm');
+  });
+
+  test('validates real dates and refuses future weeks or months', async () => {
+    await createUser({ email: 'nima@example.com' });
+    const agent = await signedIn('nima@example.com');
+    const futureWeek = addDays(TODAY, 14);
+
+    expect((await agent.get('/api/analytics?week=2026-02-31')).status).toBe(400);
+    expect((await agent.get(`/api/analytics?week=${futureWeek}`)).status).toBe(400);
+    expect((await agent.get(`/api/analytics?month=${nextMonth()}`)).status).toBe(400);
   });
 });
 

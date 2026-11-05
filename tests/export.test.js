@@ -8,6 +8,7 @@ jest.mock('../config/mailer', () => ({
 
 const { db, resetDb, createUser, createEntry, closeDb } = require('./helpers/db');
 const { client, signedIn } = require('./helpers/http');
+const { exportLimiter } = require('../middleware/exportLimit');
 const { todayInTimezone, addDays, weekdayName } = require('../utils/dates');
 
 const TODAY = todayInTimezone();
@@ -17,6 +18,8 @@ const TOMORROW = addDays(TODAY, 1);
 
 beforeEach(async () => {
   await resetDb();
+  // resetDb restarts ids; clear the in-memory limiter keys reused by test users.
+  for (let id = 1; id <= 20; id += 1) exportLimiter.resetKey(`user:${id}`);
 });
 
 afterAll(async () => {

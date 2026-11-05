@@ -1,6 +1,18 @@
-<%- include('../partials/header', { title: 'Log in', pageClass: 'page--narrow' }) %>
+<%- include('../partials/header', { title: 'Log in', pageClass: 'page--auth' }) %>
 
-<div class="card">
+<div class="auth-layout">
+  <section class="auth-art" aria-label="Bhutanese valley at sunrise">
+    <img src="/images/bhutan-valley.svg" alt="Illustration of a Bhutanese dzong beneath Himalayan peaks and prayer flags">
+    <div class="auth-art__caption">
+      <span class="eyebrow">Welcome back</span>
+      <h2>Make room for how you feel.</h2>
+      <p>Your journal is ready whenever you are.</p>
+    </div>
+    <span class="auth-art__seal" aria-hidden="true">འབྲུག</span>
+  </section>
+
+  <div class="card auth-card">
+  <span class="eyebrow">Your private daily journal</span>
   <h1>Welcome back</h1>
   <p class="muted">Log in to record how you feel today.</p>
 
@@ -22,6 +34,7 @@
 
   <p class="muted"><a href="/forgot-password">Forgot your password?</a></p>
   <p class="muted">New here? <a href="/signup">Create an account</a></p>
+  </div>
 </div>
 
 <%- include('../partials/footer') %>

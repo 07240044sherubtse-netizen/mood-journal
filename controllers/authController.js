@@ -9,6 +9,7 @@ const validators = require('../utils/validators');
 
 const BCRYPT_ROUNDS = 10;
 const RESET_TOKEN_MINUTES = 60; // reset links expire after 1 hour
+const VERIFY_TOKEN_HOURS = 24;
 
 // Every link in an email is built from BASE_URL.
 function baseUrl() {
@@ -55,6 +56,24 @@ async function signup(req, res) {
 
   const existing = await User.findByEmail(check.email);
   if (existing) {
+    if (!existing.is_verified) {
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + VERIFY_TOKEN_HOURS * 60 * 60 * 1000);
+      await User.setVerificationToken(existing.id, token, expiresAt);
+      const delivery = await mailer.sendVerificationEmail(
+        { name: existing.name, email: existing.email },
+        `${baseUrl()}/verify/${token}`
+      );
+      return res.status(delivery.failed ? 503 : 200).render('pages/message', {
+        title: delivery.failed ? 'Email not sent' : 'Check your email',
+        heading: delivery.failed ? 'We could not send your verification email' : 'Check your email',
+        text: delivery.failed
+          ? (delivery.error || 'The email service is unavailable or not configured. Please try again later.')
+          : 'We sent a fresh verification link. It expires in 24 hours.',
+        linkHref: '/login',
+        linkText: 'Go to log in'
+      });
+    }
     return res.status(400).render('pages/signup', {
       title: 'Create your account',
       error: 'An account with that email already exists. Try logging in instead.',
@@ -64,19 +83,31 @@ async function signup(req, res) {
 
   const passwordHash = await bcrypt.hash(check.password, BCRYPT_ROUNDS);
   const verificationToken = crypto.randomBytes(32).toString('hex'); // long, random, unguessable
+  const verificationExpiresAt = new Date(Date.now() + VERIFY_TOKEN_HOURS * 60 * 60 * 1000);
 
   // New accounts are always role 'user' and never verified - a form can never change that.
   await User.create({
     name: check.name,
     email: check.email,
     passwordHash,
-    verificationToken
+    verificationToken,
+    verificationExpiresAt
   });
 
-  await mailer.sendVerificationEmail(
+  const delivery = await mailer.sendVerificationEmail(
     { name: check.name, email: check.email },
     `${baseUrl()}/verify/${verificationToken}`
   );
+
+  if (delivery.failed) {
+    return res.status(503).render('pages/message', {
+      title: 'Email not sent',
+      heading: 'We could not send your verification email',
+      text: `Your account was created, but ${delivery.error || 'the email service is unavailable or not configured.'} Please check the server email settings and try again.`,
+      linkHref: '/login',
+      linkText: 'Back to log in'
+    });
+  }
 
   res.render('pages/message', {
     title: 'Check your email',
@@ -90,7 +121,7 @@ async function signup(req, res) {
 // GET /verify/:token
 async function verify(req, res) {
   const token = String(req.params.token || '');
-  const user = token ? await User.findByVerificationToken(token) : null;
+  const user = token ? await User.verifyWithToken(token) : null;
 
   if (!user) {
     return res.status(400).render('pages/message', {
@@ -102,7 +133,6 @@ async function verify(req, res) {
     });
   }
 
-  await User.markVerified(user.id);
   res.render('pages/verify-success', { title: 'Email verified' });
 }
 

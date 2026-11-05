@@ -112,9 +112,10 @@ npm start       # plain node
 
 Then open <http://localhost:3000>.
 
-In development the Gmail variables are usually left empty, so the verification
-link is **printed in the terminal** instead of being emailed — you can copy it
-straight into the browser.
+Locally, verification and password-reset messages send through Gmail SMTP. Set
+`GMAIL_USER` and `GMAIL_APP_PASSWORD` in `.env` (use a Gmail App Password, not
+your normal password). Render production uses the Apps Script relay; see
+`DEPLOYMENT.md`. Email links are never written to terminal logs.
 
 ---
 
@@ -133,8 +134,10 @@ straight into the browser.
 | `DB_PASS` | — | Database password. |
 | `DB_SSL` | `false` | `true` for cloud databases (Neon, Render). |
 | `SESSION_SECRET` | — | Long random string that signs the session cookie. |
-| `GMAIL_USER` | — | Gmail address used to send mail. |
-| `GMAIL_APP_PASSWORD` | — | A Gmail **App Password** (not your normal password). |
+| `GMAIL_USER` | — | Gmail sender address required for local email delivery. |
+| `GMAIL_APP_PASSWORD` | — | Gmail App Password required locally; not your regular password. |
+| `MAIL_WEBHOOK_URL` | — | Deployed Google Apps Script web app URL ending in `/exec`. |
+| `MAIL_WEBHOOK_SECRET` | — | Shared secret checked by the production Apps Script relay. |
 
 Make a `SESSION_SECRET` with:
 
@@ -350,8 +353,8 @@ mood-journal/
 
 * Passwords are hashed with **bcrypt** (10 rounds; 4 in the tests, for speed).
 * Verification and reset tokens come from `crypto.randomBytes(32)`, are stored in
-  the database and are **single-use**. A reset token expires after 1 hour, and
-  the expiry is checked inside the SQL.
+  the database and are **single-use**. Verification tokens expire after 24 hours;
+  reset tokens expire after 1 hour. Expiry is checked inside SQL.
 * The session cookie is `HttpOnly`, `SameSite=Lax`, and `Secure` in production.
   Only the user's id, name and role are kept in the session.
 * Every state-changing request needs a CSRF token: a hidden `_csrf` field in

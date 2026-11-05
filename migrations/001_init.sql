@@ -12,10 +12,13 @@ CREATE TABLE IF NOT EXISTS users (
   is_verified         BOOLEAN      NOT NULL DEFAULT false,
   is_active           BOOLEAN      NOT NULL DEFAULT true,
   verification_token  VARCHAR(255),
+  verification_token_expires TIMESTAMPTZ,
   reset_token         VARCHAR(255),
   reset_token_expires TIMESTAMPTZ,
   created_at          TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS entries (
   id         SERIAL PRIMARY KEY,

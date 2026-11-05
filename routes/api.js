@@ -18,6 +18,7 @@ router.put('/entries/today', apiController.putToday);
 router.get('/entries', apiController.getEntries);
 router.get('/entries/:date', validateDateParam, apiController.getEntry);
 router.get('/stats', apiController.getStats);
+router.get('/analytics', apiController.getAnalytics);
 
 // Download my data as a CSV file (optional ?from= and ?to=)
 router.get('/export.csv', exportLimiter, exportController.exportCsvApi);

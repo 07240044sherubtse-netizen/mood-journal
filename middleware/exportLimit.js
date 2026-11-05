@@ -13,7 +13,7 @@ const exportLimiter = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => `user:${req.currentUser ? req.currentUser.id : 'anonymous'}`,
   handler: (req, res) => {
-    if (req.path.startsWith('/api')) {
+    if (req.baseUrl.startsWith('/api')) {
       return res.status(429).json({ error: MESSAGE });
     }
     res.status(429).render('pages/message', {

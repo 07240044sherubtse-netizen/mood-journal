@@ -95,6 +95,74 @@
   <p class="hint">Tap a day to look back at it.</p>
 </div>
 
+<section class="analytics-section" id="mood-analytics" data-today="<%= today %>">
+  <div class="analytics-heading">
+    <div>
+      <span class="eyebrow">Your patterns, at a glance</span>
+      <h2>Mood Analytics</h2>
+      <p class="muted">A private look at the rhythms in your journal.</p>
+    </div>
+    <div class="analytics-tabs" role="group" aria-label="Analytics period">
+      <button class="analytics-tab is-active" type="button" data-view="week" aria-pressed="true">Weekly</button>
+      <button class="analytics-tab" type="button" data-view="month" aria-pressed="false">Monthly</button>
+    </div>
+  </div>
+
+  <div class="analytics-summary" aria-live="polite">
+    <article class="analytics-stat">
+      <span class="analytics-stat__icon" aria-hidden="true">✦</span>
+      <p class="muted small">All-time entries</p>
+      <strong id="analytics-total">—</strong>
+    </article>
+    <article class="analytics-stat">
+      <span class="analytics-stat__icon" aria-hidden="true">☼</span>
+      <p class="muted small">Most common this month</p>
+      <strong id="analytics-common">—</strong>
+    </article>
+    <article class="analytics-stat">
+      <span class="analytics-stat__icon" aria-hidden="true">↗</span>
+      <p class="muted small">Current streak</p>
+      <strong id="analytics-current-streak">—</strong>
+    </article>
+    <article class="analytics-stat">
+      <span class="analytics-stat__icon" aria-hidden="true">✧</span>
+      <p class="muted small">Longest streak</p>
+      <strong id="analytics-longest-streak">—</strong>
+    </article>
+  </div>
+
+  <div class="analytics-sentiment" aria-live="polite">
+    <span class="analytics-sentiment__title">This month’s mood mix</span>
+    <span class="sentiment-count sentiment-count--positive"><i></i>Positive <b id="analytics-positive">0</b></span>
+    <span class="sentiment-count sentiment-count--neutral"><i></i>Neutral <b id="analytics-neutral">0</b></span>
+    <span class="sentiment-count sentiment-count--negative"><i></i>Negative <b id="analytics-negative">0</b></span>
+    <span class="analytics-sentiment__note">Positive: Happy, Calm, Excited · Neutral: Neutral, Tired · Negative: Anxious, Sad, Angry</span>
+  </div>
+
+  <div class="analytics-card" aria-live="polite">
+    <div class="analytics-card__top">
+      <div>
+        <h3 id="analytics-period-title">Mood Overview: This Week</h3>
+        <p class="muted small" id="analytics-period-subtitle">Your mood by day, Monday to Sunday.</p>
+      </div>
+      <div class="period-controls">
+        <button class="period-button" id="analytics-previous" type="button" aria-label="Previous week">‹</button>
+        <span class="period-label" id="analytics-period-label">Loading…</span>
+        <button class="period-button" id="analytics-next" type="button" aria-label="Next week" disabled>›</button>
+      </div>
+    </div>
+
+    <p class="analytics-error is-hidden" id="analytics-error" role="alert"></p>
+    <p class="analytics-empty is-hidden" id="analytics-empty" role="status"></p>
+    <div class="analytics-chart-wrap" id="analytics-chart-wrap">
+      <svg class="analytics-chart" id="weekly-chart" role="img" aria-label="Weekly mood chart"></svg>
+      <svg class="analytics-chart is-hidden" id="monthly-chart" role="img" aria-label="Monthly mood distribution chart"></svg>
+    </div>
+    <p class="analytics-footnote" id="analytics-footnote">Gaps mean no mood was recorded; they are not scored as zero.</p>
+  </div>
+</section>
+
 <script src="/js/dashboard.js"></script>
+<script src="/js/analytics.js"></script>
 
 <%- include('../partials/footer') %>

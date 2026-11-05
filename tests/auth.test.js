@@ -47,6 +47,23 @@ describe('signing up', () => {
     expect(user.password_hash).not.toBe('password123'); // never stored as plain text
     expect(user.verification_token).toBeTruthy();
     expect(mailer.sendVerificationEmail).toHaveBeenCalledTimes(1);
+    expect(mailer.sendVerificationEmail.mock.calls[0][1]).toMatch(/^http:\/\/localhost:3000\/verify\/[a-f0-9]{64}$/);
+    expect(user.verification_token_expires).toBeTruthy();
+  });
+
+  test('shows an honest error when email delivery fails', async () => {
+    mailer.sendVerificationEmail.mockResolvedValueOnce({ failed: true });
+    const agent = client();
+    const token = await csrf(agent, '/signup');
+    const res = await agent.post('/signup').type('form').send({
+      _csrf: token,
+      name: 'Nima',
+      email: 'nima@example.com',
+      password: 'password123',
+      confirmPassword: 'password123'
+    });
+    expect(res.status).toBe(503);
+    expect(res.text).toMatch(/could not send your verification email/i);
   });
 
   test('refuses two different passwords', async () => {
@@ -121,7 +138,7 @@ describe('signing up', () => {
 describe('verifying an email', () => {
   test('a valid link verifies the account, and the same link cannot be used twice', async () => {
     const user = await createUser({ email: 'nima@example.com', verified: false });
-    await db.none('UPDATE users SET verification_token = $2 WHERE id = $1', [user.id, 'verify-me-123']);
+    await db.none(`UPDATE users SET verification_token = $2, verification_token_expires = now() + interval '1 day' WHERE id = $1`, [user.id, 'verify-me-123']);
 
     const agent = client();
     const first = await agent.get('/verify/verify-me-123');
@@ -131,6 +148,7 @@ describe('verifying an email', () => {
     const after = await db.one('SELECT * FROM users WHERE id = $1', [user.id]);
     expect(after.is_verified).toBe(true);
     expect(after.verification_token).toBeNull(); // the token is burned
+    expect(after.verification_token_expires).toBeNull();
 
     const second = await agent.get('/verify/verify-me-123');
     expect(second.status).toBe(400);
@@ -140,6 +158,14 @@ describe('verifying an email', () => {
     const res = await client().get('/verify/definitely-not-a-real-token');
     expect(res.status).toBe(400);
     expect(res.text).toMatch(/not valid/i);
+  });
+
+  test('an expired link is refused', async () => {
+    const user = await createUser({ email: 'expired@example.com', verified: false });
+    await db.none(`UPDATE users SET verification_token = $2, verification_token_expires = now() - interval '1 second' WHERE id = $1`, [user.id, 'expired-token']);
+    expect((await client().get('/verify/expired-token')).status).toBe(400);
+    const unchanged = await db.one('SELECT is_verified FROM users WHERE id = $1', [user.id]);
+    expect(unchanged.is_verified).toBe(false);
   });
 });
 

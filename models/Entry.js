@@ -27,6 +27,16 @@ module.exports = {
     );
   },
 
+  // A closed date range for an analytics week. Both ends and the user are parameters.
+  getInRange(userId, from, to) {
+    return db.any(
+      `SELECT ${COLUMNS} FROM entries
+        WHERE user_id = $1 AND entry_date >= $2::date AND entry_date <= $3::date
+        ORDER BY entry_date ASC`,
+      [userId, from, to]
+    );
+  },
+
   // The most recent entries (used by the 7-day strip on the dashboard).
   getRecent(userId, limit) {
     return db.any(

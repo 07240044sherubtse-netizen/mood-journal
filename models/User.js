@@ -8,12 +8,12 @@ const PUBLIC_COLUMNS = 'id, name, email, role, is_verified, is_active, created_a
 
 module.exports = {
   // Create a normal, not-yet-verified user. role is never taken from a form.
-  create({ name, email, passwordHash, verificationToken }) {
+  create({ name, email, passwordHash, verificationToken, verificationExpiresAt }) {
     return db.one(
-      `INSERT INTO users (name, email, password_hash, verification_token, role, is_verified)
-       VALUES ($1, $2, $3, $4, 'user', false)
+      `INSERT INTO users (name, email, password_hash, verification_token, verification_token_expires, role, is_verified)
+       VALUES ($1, $2, $3, $4, $5, 'user', false)
        RETURNING ${PUBLIC_COLUMNS}`,
-      [name, email, passwordHash, verificationToken]
+      [name, email, passwordHash, verificationToken, verificationExpiresAt]
     );
   },
 
@@ -43,7 +43,30 @@ module.exports = {
   },
 
   findByVerificationToken(token) {
-    return db.oneOrNone('SELECT * FROM users WHERE verification_token = $1', [token]);
+    return db.oneOrNone(
+      `SELECT * FROM users WHERE verification_token = $1
+        AND verification_token_expires > now() AND is_verified = false`,
+      [token]
+    );
+  },
+
+  setVerificationToken(id, token, expiresAt) {
+    return db.none(
+      `UPDATE users SET verification_token = $2, verification_token_expires = $3
+        WHERE id = $1 AND is_verified = false`,
+      [id, token, expiresAt]
+    );
+  },
+
+  // Atomic update makes a token expire and succeed only once, even for concurrent requests.
+  verifyWithToken(token) {
+    return db.oneOrNone(
+      `UPDATE users SET is_verified = true, verification_token = NULL,
+                        verification_token_expires = NULL
+        WHERE verification_token = $1 AND verification_token_expires > now() AND is_verified = false
+        RETURNING id`,
+      [token]
+    );
   },
 
   // The expiry check happens inside the query, so an old token simply finds nothing.
@@ -57,7 +80,7 @@ module.exports = {
 
   markVerified(id) {
     return db.none(
-      'UPDATE users SET is_verified = true, verification_token = NULL WHERE id = $1',
+      'UPDATE users SET is_verified = true, verification_token = NULL, verification_token_expires = NULL WHERE id = $1',
       [id]
     );
   },

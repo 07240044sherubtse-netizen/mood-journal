@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "nodemon --watch .env --watch app.js --watch server.js --watch config --watch controllers --watch models --watch routes --watch middleware --watch views --watch public --watch utils server.js",
     "test": "jest",
     "test-db": "node test-db.js",
     "create-admin": "node scripts/createSuperAdmin.js"

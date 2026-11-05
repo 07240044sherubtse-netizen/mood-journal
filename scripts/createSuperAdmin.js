@@ -18,12 +18,29 @@ function ask(question) {
   return new Promise((resolve) => rl.question(question, (answer) => resolve(answer)));
 }
 
+function askPassword(question) {
+  return new Promise((resolve) => {
+    process.stdout.write(question);
+    const originalWrite = rl._writeToOutput;
+    rl.stdoutMuted = true;
+    rl._writeToOutput = function (text) {
+      if (/[\r\n]/.test(text)) this.output.write('\n');
+      else this.output.write('*'.repeat(text.length));
+    };
+    rl.question('', (answer) => {
+      rl.stdoutMuted = false;
+      rl._writeToOutput = originalWrite;
+      resolve(answer);
+    });
+  });
+}
+
 async function main() {
   console.log('Create a MoodJournal super admin\n');
 
   const name = (await ask('Name: ')).trim();
   const email = (await ask('Email: ')).trim().toLowerCase();
-  const password = (await ask('Password (8+ characters): ')).trim();
+  const password = (await askPassword('Password (8+ characters): ')).trim();
 
   if (name.length < 1 || name.length > 100) {
     console.error('Please enter a name (1 to 100 characters).');

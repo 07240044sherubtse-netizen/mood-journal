@@ -140,7 +140,7 @@ describe('account actions', () => {
 
   test('reactivating and verifying are written down too', async () => {
     const { person } = await twoPeople();
-    await db.none('UPDATE users SET is_active = false WHERE id = $1', [person.id]);
+    await db.none('UPDATE users SET is_active = false, is_verified = false WHERE id = $1', [person.id]);
 
     const admin = await signedIn('admin@example.com');
     const token = await csrf(admin, '/admin');
