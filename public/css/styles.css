@@ -64,19 +64,21 @@ body {
 .dashboard-hero__caption {
   position: absolute;
   top: 50%;
-  left: max(24px, calc((100vw - 928px) / 2));
-  width: min(560px, calc(100% - 48px));
+  left: 50%;
+  width: calc(100% - 48px);
   color: #fff;
-  transform: translateY(-50%);
+  text-align: center;
+  transform: translate(-50%, -50%);
 }
 .dashboard-hero__caption .eyebrow { color: #f5d77e; }
 .dashboard-hero__caption h2 {
   margin: 12px 0;
-  font-size: clamp(1.8rem, 4.2vw, 3.25rem);
+  font-size: clamp(.8rem, 4vw, 3rem);
   line-height: 1.08;
   letter-spacing: -.04em;
+  white-space: nowrap;
 }
-.dashboard-hero__caption p { max-width: 440px; margin: 0; color: rgba(255,255,255,.88); }
+.dashboard-hero__caption p { max-width: 620px; margin: 0 auto; color: rgba(255,255,255,.88); }
 .dashboard-hero__dots {
   position: absolute;
   right: 24px;
@@ -98,7 +100,7 @@ body {
 
 @media (max-width: 640px) {
   .dashboard-hero { width: calc(100vw - 24px); height: clamp(220px, 42vw, 250px); margin-bottom: 16px; }
-  .dashboard-hero__caption { left: 22px; width: calc(100% - 44px); }
+  .dashboard-hero__caption { width: calc(100% - 32px); }
   .dashboard-hero__dots { right: 20px; bottom: 16px; }
 }
 
