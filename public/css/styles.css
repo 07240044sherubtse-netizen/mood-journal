@@ -37,8 +37,8 @@ body {
 .dashboard-hero {
   position: relative;
   width: calc(100vw - 32px);
-  height: clamp(260px, 36vw, 400px);
-  margin: 0 0 24px 50%;
+  height: clamp(300px, 28vw, 340px);
+  margin: 0 0 18px 50%;
   overflow: hidden;
   isolation: isolate;
   border: 1px solid rgba(207, 204, 190, .72);
@@ -97,7 +97,7 @@ body {
 .dashboard-hero__dot:focus-visible { outline-color: #fff; }
 
 @media (max-width: 640px) {
-  .dashboard-hero { width: calc(100vw - 24px); height: clamp(220px, 62vw, 300px); margin-bottom: 18px; }
+  .dashboard-hero { width: calc(100vw - 24px); height: clamp(220px, 42vw, 250px); margin-bottom: 16px; }
   .dashboard-hero__caption { left: 22px; width: calc(100% - 44px); }
   .dashboard-hero__dots { right: 20px; bottom: 16px; }
 }
