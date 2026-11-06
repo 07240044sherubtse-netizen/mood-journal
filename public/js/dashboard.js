@@ -2,6 +2,43 @@
 // Nothing important happens here: the server still checks everything.
 
 (function () {
+  // Dashboard image carousel. It stays isolated to pages that render the hero.
+  var carousel = document.querySelector('[data-carousel]');
+  if (carousel) {
+    var slides = Array.prototype.slice.call(carousel.querySelectorAll('.dashboard-hero__slide'));
+    var dots = Array.prototype.slice.call(carousel.querySelectorAll('.dashboard-hero__dot'));
+    var activeIndex = 0;
+    var rotation;
+
+    function showSlide(index) {
+      activeIndex = (index + slides.length) % slides.length;
+      slides.forEach(function (slide, slideIndex) {
+        slide.classList.toggle('is-active', slideIndex === activeIndex);
+      });
+      dots.forEach(function (dot, dotIndex) {
+        var active = dotIndex === activeIndex;
+        dot.classList.toggle('is-active', active);
+        dot.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+
+    function startRotation() {
+      window.clearInterval(rotation);
+      rotation = window.setInterval(function () { showSlide(activeIndex + 1); }, 2000);
+    }
+
+    dots.forEach(function (dot, index) {
+      dot.addEventListener('click', function () {
+        showSlide(index);
+        startRotation();
+      });
+    });
+    carousel.addEventListener('mouseenter', function () { window.clearInterval(rotation); });
+    carousel.addEventListener('mouseleave', startRotation);
+    showSlide(0);
+    startRotation();
+  }
+
   var note = document.getElementById('note');
   var count = document.getElementById('note-count');
 

@@ -1,5 +1,24 @@
 <%- include('../partials/header', { title: 'Dashboard' }) %>
 
+<section class="dashboard-hero" aria-label="Mood Journal highlights" data-carousel>
+  <div class="dashboard-hero__slides">
+    <div class="dashboard-hero__slide is-active" role="img" aria-label="Peaceful landscape" style="background-image: url('/mood1.jpg')"></div>
+    <div class="dashboard-hero__slide" role="img" aria-label="A moment of calm" style="background-image: url('/mood2.jpg')"></div>
+    <div class="dashboard-hero__slide" role="img" aria-label="A bright new day" style="background-image: url('/mood3.webp')"></div>
+  </div>
+  <div class="dashboard-hero__shade" aria-hidden="true"></div>
+  <div class="dashboard-hero__caption">
+    <span class="eyebrow">A moment for you</span>
+    <h2>Make space for how you feel.</h2>
+    <p>Your thoughts, your pace, your own little corner of calm.</p>
+  </div>
+  <div class="dashboard-hero__dots" role="group" aria-label="Choose a featured image">
+    <button class="dashboard-hero__dot is-active" type="button" aria-label="Show image 1" aria-pressed="true"></button>
+    <button class="dashboard-hero__dot" type="button" aria-label="Show image 2" aria-pressed="false"></button>
+    <button class="dashboard-hero__dot" type="button" aria-label="Show image 3" aria-pressed="false"></button>
+  </div>
+</section>
+
 <div class="card">
   <p class="muted"><%= weekday %>, <%= today %></p>
   <h1><%= greeting %></h1>
